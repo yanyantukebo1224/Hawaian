@@ -19,3 +19,28 @@ final class ConversationIntentTests: XCTestCase {
         XCTAssertEqual(accept?.missingFields, [])
     }
 }
+
+
+final class SpeechLanguagePolicyTests: XCTestCase {
+    func testDeviceLanguageUsesFirstPreferredLanguage() {
+        XCTAssertEqual(
+            SpeechLanguagePolicy.deviceLanguageCode(preferredLanguages: ["ja-JP", "en-US"]),
+            "ja"
+        )
+    }
+
+    func testFilteringExcludesOnlyTheDeviceLanguage() {
+        let locales = [
+            Locale(identifier: "ja-JP"),
+            Locale(identifier: "en-US"),
+            Locale(identifier: "ko-KR")
+        ]
+        let filtered = SpeechLanguagePolicy.filter(locales, excludingLanguageCode: "ja")
+        XCTAssertEqual(filtered.map { $0.identifier }, ["en-US", "ko-KR"])
+    }
+
+    func testFilteringCanBeDisabled() {
+        let locales = [Locale(identifier: "ja-JP"), Locale(identifier: "en-US")]
+        XCTAssertEqual(SpeechLanguagePolicy.filter(locales, excludingLanguageCode: nil).count, 2)
+    }
+}
