@@ -89,7 +89,7 @@ struct ContentView: View {
             Spacer(minLength: 0)
         }
         if ignoreDeviceLanguage {
-            Label("Ignoring device language: \\(deviceLanguageName)", systemImage: "speaker.slash")
+            Label("Ignoring device language: \(deviceLanguageName)", systemImage: "speaker.slash")
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(.cyan.opacity(0.88))
         } else {
@@ -271,7 +271,7 @@ struct ContentView: View {
                 Section("Speech input") {
                     Toggle("Ignore device language", isOn: $ignoreDeviceLanguage)
                     Text(ignoreDeviceLanguage
-                         ? "The preferred language of this iPhone (\\(deviceLanguageName)) will be excluded from recognition candidates. Other supported languages remain eligible."
+                         ? "The preferred language of this iPhone (\(deviceLanguageName)) will be excluded from recognition candidates. Other supported languages remain eligible."
                          : "The iPhone preferred language is allowed as a recognition candidate.")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
