@@ -9,15 +9,15 @@ struct SmartReplyEngine {
         let fillPrompt: String?
     }
 
-    static func candidates(for intent: ConversationIntent, incomingText: String) -> [Candidate] {
+    static func candidates(for intent: ConversationIntent, incomingText: String, recentContext: [String] = []) -> [Candidate] {
         let text = incomingText.trimmingCharacters(in: .whitespacesAndNewlines)
         let hasQuestion = text.contains("?") || text.contains("？")
         let detail = text.isEmpty ? nil : String(text.prefix(100))
 
         let clarify = Candidate(
             id: "clarify",
-            title: "Ask for clarification",
-            body: hasQuestion ? "Could you explain that a little more?" : "Could you tell me a little more about that?",
+            title: recentContext.isEmpty ? "Ask for clarification" : "Check the context",
+            body: hasQuestion ? "Could you explain that a little more?" : (recentContext.isEmpty ? "Could you tell me a little more about that?" : "Just to make sure I understood our conversation, could you clarify?"),
             requiresFill: false,
             fillPrompt: nil
         )
