@@ -28,7 +28,6 @@ final class LiveConversationEngine: ObservableObject {
     private let synthesizer = AVSpeechSynthesizer()
     private var recognizers: [(code: String, recognizer: SFSpeechRecognizer)] = []
     private var tasks: [SFSpeechRecognitionTask] = []
-    private var requests: [SFSpeechAudioBufferRecognitionRequest] = []
     private let requestBox = AudioRequestBox()
     private var generation = 0
     private var isRestarting = false
@@ -210,7 +209,7 @@ final class LiveConversationEngine: ObservableObject {
         let newRequests = recognizers.map { pair -> SFSpeechAudioBufferRecognitionRequest in
             let request = SFSpeechAudioBufferRecognitionRequest()
             request.shouldReportPartialResults = true
-            request.taskHint = .conversation
+            request.taskHint = .dictation
             request.requiresOnDeviceRecognition = pair.recognizer.supportsOnDeviceRecognition
             return request
         }
@@ -219,6 +218,7 @@ final class LiveConversationEngine: ObservableObject {
 
         for (index, pair) in recognizers.enumerated() {
             let request = newRequests[index]
+            let languageCode = pair.code
             let task = pair.recognizer.recognitionTask(with: request) { [weak self] result, error in
                 guard let self else { return }
                 if let result {
@@ -228,7 +228,7 @@ final class LiveConversationEngine: ObservableObject {
                         : Double(result.bestTranscription.segments.map(\.confidence).reduce(0, +)) / Double(result.bestTranscription.segments.count)
                     Task { @MainActor in
                         guard self.generation == currentGeneration, self.state == .listening else { return }
-                        self.receive(text: text, languageCode: pair.code, confidence: confidence, isFinal: result.isFinal)
+                        self.receive(text: text, languageCode: languageCode, confidence: confidence, isFinal: result.isFinal)
                     }
                 } else if let error {
                     Task { @MainActor in
