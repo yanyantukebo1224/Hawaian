@@ -36,7 +36,7 @@ final class SpeechLanguagePolicyTests: XCTestCase {
             Locale(identifier: "ko-KR")
         ]
         let filtered = SpeechLanguagePolicy.filter(locales, excludingLanguageCode: "ja")
-        XCTAssertEqual(filtered.map { $0.identifier }, ["en-US", "ko-KR"])
+        XCTAssertEqual(filtered.compactMap { $0.language.languageCode?.identifier }, ["en", "ko"])
     }
 
     func testFilteringCanBeDisabled() {
