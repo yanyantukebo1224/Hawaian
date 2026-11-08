@@ -1,5 +1,6 @@
 import SwiftUI
 import Translation
+import AVFoundation
 
 struct ContentView: View {
     @StateObject private var engine = LiveConversationEngine()
@@ -11,6 +12,7 @@ struct ContentView: View {
     @State private var showSettings = false
     @State private var isStarting = false
     @AppStorage("translationTargetLanguage") private var selectedLanguage = "en"
+    @AppStorage("inputLanguageCode") private var inputLanguageCode = "auto"
     @AppStorage("ignoreDeviceLanguage") private var ignoreDeviceLanguage = true
     @AppStorage("hawaian.pendingStart") private var pendingStart = false
     @AppStorage("hawaian.pendingStop") private var pendingStop = false
@@ -60,6 +62,22 @@ struct ContentView: View {
         }
         .onChange(of: ignoreDeviceLanguage) { _, enabled in
             Task { await languageCatalog.load(excludingDeviceLanguage: enabled, targetLanguageCode: selectedLanguage) }
+            if engine.isListening {
+                engine.stop()
+                Task { await startListening() }
+            }
+        }
+        .onChange(of: inputLanguageCode) { _, _ in
+            if engine.isListening {
+                engine.stop()
+                Task { await startListening() }
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: AVAudioSession.routeChangeNotification)) { _ in
+            engine.refreshOutputRoute()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: AVAudioSession.interruptionNotification)) { notification in
+            engine.handleAudioInterruption(notification)
         }
         .onChange(of: pendingStart) { _, requested in
             guard requested else { return }
@@ -110,7 +128,25 @@ struct ContentView: View {
 
     private var languageBar: some View {
         HStack(spacing: 10) {
-            languagePill("AUTO", icon: "waveform")
+            Menu {
+                Button("Auto detect (up to 8 languages)") { inputLanguageCode = "auto" }
+                ForEach(languageCatalog.speechInputLocales, id: \.identifier) { locale in
+                    Button(languageCatalog.displayName(for: locale.identifier)) {
+                        inputLanguageCode = locale.language.languageCode?.identifier ?? locale.identifier
+                    }
+                }
+            } label: {
+                HStack(spacing: 7) {
+                    Image(systemName: "waveform")
+                    Text(inputLanguageCode == "auto" ? "Auto" : languageCatalog.displayName(for: inputLanguageCode))
+                    Image(systemName: "chevron.down").font(.system(size: 10, weight: .bold))
+                }
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(.white)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+                .glassEffect(.regular, in: Capsule())
+            }
             Image(systemName: "arrow.left.arrow.right")
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundStyle(.white.opacity(0.45))
@@ -139,7 +175,7 @@ struct ContentView: View {
                  ? "Ignoring device language: \(languageCatalog.displayName(for: SpeechLanguagePolicy.deviceLanguageCode()))"
                  : "Device language is included")
             Spacer()
-            Text("\(languageCatalog.speechInputLocales.count) languages")
+            Text(inputLanguageCode == "auto" ? "Auto: max 8" : "Manual input")
                 .monospacedDigit()
         }
         .font(.system(size: 10, weight: .medium))
@@ -400,7 +436,7 @@ struct ContentView: View {
                          ? "The iPhone's preferred language is excluded from recognition candidates."
                          : "The iPhone's preferred language can be recognized.")
                         .font(.footnote).foregroundStyle(.secondary)
-                    Text("Available speech languages: \(languageCatalog.speechInputLocales.count)")
+                    Text("Available speech languages: \(languageCatalog.speechInputLocales.count). Auto mode uses up to 8 concurrent recognizers to keep latency and battery use manageable.")
                         .font(.footnote).foregroundStyle(.secondary)
                 }
                 Section("Translation") {
@@ -471,7 +507,7 @@ struct ContentView: View {
     private func startListening() async {
         guard !isStarting else { return }
         isStarting = true
-        await engine.start(targetLanguageCode: selectedLanguage, excludeDeviceLanguage: ignoreDeviceLanguage)
+        await engine.start(targetLanguageCode: selectedLanguage, excludeDeviceLanguage: ignoreDeviceLanguage, inputLanguageCode: inputLanguageCode)
         isStarting = false
     }
 }
