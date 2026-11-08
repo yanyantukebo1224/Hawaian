@@ -22,7 +22,7 @@ struct ContentView: View {
     }
 
     private var replyCandidates: [SmartReplyEngine.Candidate] {
-        SmartReplyEngine.candidates(for: selectedIntent, incomingText: engine.translatedText)
+        SmartReplyEngine.candidates(for: selectedIntent, incomingText: engine.translatedText, recentContext: engine.contextMemory)
     }
 
     private var selectedReply: SmartReplyEngine.Candidate? {
@@ -55,6 +55,14 @@ struct ContentView: View {
         }
         .task {
             await languageCatalog.load(excludingDeviceLanguage: ignoreDeviceLanguage, targetLanguageCode: selectedLanguage)
+            if pendingStop {
+                pendingStop = false
+                engine.stop()
+            }
+            if pendingStart {
+                pendingStart = false
+                await startListening()
+            }
         }
         .onChange(of: selectedLanguage) { _, code in
             engine.updateTargetLanguage(code)
