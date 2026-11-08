@@ -2,12 +2,12 @@ name: Hawaian
 options:
   bundleIdPrefix: com.yanyantukebo1224
   deploymentTarget:
-    iOS: "27.2"
+    iOS: "27.1"
   createIntermediateGroups: true
 settings:
   base:
     SWIFT_VERSION: "6.0"
-    IPHONEOS_DEPLOYMENT_TARGET: "27.2"
+    IPHONEOS_DEPLOYMENT_TARGET: "27.1"
     TARGETED_DEVICE_FAMILY: "1,2"
     DEVELOPMENT_TEAM: ""
 targets:
