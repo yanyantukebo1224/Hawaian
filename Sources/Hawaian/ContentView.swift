@@ -6,6 +6,7 @@ struct ContentView: View {
     @State private var selectedLanguage = "English"
     @State private var selectedReply: ReplySuggestion?
     @State private var showIntentPicker = false
+    @State private var showSettings = false
 
     private let languages = ["English", "日本語", "한국어", "Español", "Français"]
 
@@ -32,6 +33,11 @@ struct ContentView: View {
                 .presentationDetents([.medium, .large])
                 .presentationDragIndicator(.visible)
         }
+        .sheet(isPresented: $showSettings) {
+            settingsSheet
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
+        }
     }
 
     private var header: some View {
@@ -46,13 +52,12 @@ struct ContentView: View {
                     .tracking(-1.2)
             }
             Spacer()
-            Button {} label: {
+            Button { showSettings = true } label: {
                 Image(systemName: "slider.horizontal.3")
                     .font(.system(size: 17, weight: .medium))
                     .foregroundStyle(.white)
                     .frame(width: 46, height: 46)
-                    .background(.ultraThinMaterial, in: Circle())
-                    .overlay(Circle().stroke(.white.opacity(0.12), lineWidth: 1))
+                    .glassEffect(.regular, in: Circle())
             }
             .accessibilityLabel("Settings")
         }
@@ -78,8 +83,7 @@ struct ContentView: View {
                 .foregroundStyle(.white)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
-                .background(.ultraThinMaterial, in: Capsule())
-                .overlay(Capsule().stroke(.white.opacity(0.12), lineWidth: 1))
+                .glassEffect(.regular, in: Capsule())
             }
             Spacer(minLength: 0)
         }
@@ -94,8 +98,7 @@ struct ContentView: View {
         .foregroundStyle(.white)
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
-        .background(.ultraThinMaterial, in: Capsule())
-        .overlay(Capsule().stroke(.white.opacity(0.12), lineWidth: 1))
+        .glassEffect(.regular, in: Capsule())
     }
 
     private var visualizerSection: some View {
@@ -138,7 +141,7 @@ struct ContentView: View {
         .padding(.vertical, 24)
         .padding(.horizontal, 20)
         .frame(maxWidth: .infinity)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 34, style: .continuous))
+        .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 34, style: .continuous))
         .overlay {
             RoundedRectangle(cornerRadius: 34, style: .continuous)
                 .stroke(LinearGradient(colors: [.white.opacity(0.24), .white.opacity(0.035)], startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1)
@@ -181,8 +184,7 @@ struct ContentView: View {
                 Spacer(minLength: 0)
             }
             .padding(15)
-            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 22).stroke(.white.opacity(0.1), lineWidth: 1))
+            .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
         }
     }
 
@@ -229,8 +231,7 @@ struct ContentView: View {
                         }
                     }
                     .padding(14)
-                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: 18).stroke(.white.opacity(selectedReply?.id == reply.id ? 0.28 : 0.08), lineWidth: 1))
+                    .glassEffect(.regular, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
                 }
                 .buttonStyle(.plain)
             }
@@ -246,6 +247,39 @@ struct ContentView: View {
         .foregroundStyle(.white.opacity(0.38))
         .frame(maxWidth: .infinity)
         .padding(.top, 4)
+    }
+
+
+    private var settingsSheet: some View {
+        NavigationStack {
+            Form {
+                Section("Translation") {
+                    Picker("Translate into", selection: $selectedLanguage) {
+                        ForEach(languages, id: \.self) { language in
+                            Text(language).tag(language)
+                        }
+                    }
+                }
+                Section("Hawaian") {
+                    Label("Earbud-first conversation assistant", systemImage: "airpodspro")
+                    Text("The animated orb is Hawaian's own voice visualizer. Siri and Apple Intelligence features will be connected only through public APIs supported by the device and language.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+                Section("Privacy") {
+                    Label("Microphone access is requested only when live listening is implemented and started.", systemImage: "lock.shield")
+                        .font(.footnote)
+                }
+            }
+            .navigationTitle("Settings")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { showSettings = false }
+                }
+            }
+        }
+        .preferredColorScheme(.dark)
     }
 
     private var intentSheet: some View {
