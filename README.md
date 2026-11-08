@@ -1,38 +1,34 @@
 # Hawaian
 
-**AI-powered multilingual conversation companion for iPhone.**
+**Earbud-first, multilingual live conversation translator for iPhone.**
 
-Hawaian is an earbud-first conversation assistant. It listens to a conversation, translates incoming speech, understands the user's selected conversation intent, proposes context-aware reply structures, fills required variables, and prepares a translated spoken response.
+Hawaian captures nearby speech, transcribes it, translates it into the selected language, and helps the user prepare a translated spoken reply.
 
-## Product principles
+## Integrated systems
 
-- Earbud-first, discreet interaction; no loudspeaker-first workflow.
-- Conversation Intent describes *why* the conversation is happening.
-- Context Memory keeps temporary facts and conversation state.
-- Smart Reply proposes response patterns, not just literal translations.
-- Variable Fill asks only for information that is genuinely missing.
-- Multilingual architecture: language support is capability-driven, not hard-coded to Japanese and English.
-- Optional input-language exclusion: by default, the first preferred language in iOS Settings is excluded from speech-recognition candidates. A Japanese-configured iPhone therefore won’t treat Japanese as an incoming language. The policy is implemented and tested; it takes effect in live capture once the speech engine is connected.
-- Siri AI (Apple’s newer conversational assistant, distinct from the Foundation Models framework) integration through public App Intents APIs where available. Siri AI app integration entered Developer Preview with iOS 27.3; availability depends on device, supported Siri/device language, region, and Apple Intelligence being enabled.
+- **Live Audio Engine:** AVAudioEngine captures microphone audio after explicit permission.
+- **Live Translation:** Apple Speech provides partial transcription; Apple Translation translates detected speech into the selected language.
+- **Language Engine:** input and output languages are discovered at runtime from Speech and Translation framework availability. The preferred iOS language is excluded from input candidates by default. Auto mode runs up to eight language recognizers concurrently to limit battery and latency; a manual source-language picker is also available.
+- **Smart Reply:** conversation intent and recent translated turns shape reply structures. Required variables can be filled by the user; the chosen reply is translated back into the detected speaker language and spoken.
+- **AirPods / audio routing:** AVAudioSession uses Bluetooth input/output routing and AVSpeechSynthesizer speaks through the active iOS route. Route changes and audio interruptions are handled.
+- **Siri AI:** App Intents and App Shortcuts expose start listening, stop listening, and latest translation actions to Siri, Shortcuts, and Apple Intelligence/Siri AI.
 
-## Important platform boundary
+## Siri AI integration
 
-Third-party apps cannot directly invoke or control Siri's private internal model, nor can they assume access to Siri's internal visualizer. Hawaian therefore provides its own Siri-inspired, animated voice visualizer and an AI-provider abstraction. Apple Intelligence and Siri integrations are added only through documented public APIs and on-device capabilities available to the device, OS version, region, and language. The app must never present a local placeholder as a live Siri response.
+Hawaian uses Apple's public App Intents integration so Siri AI can discover and execute app actions. This is the supported integration model; the app does not embed or directly call Siri's private model. Apple's Siri AI developer preview begins with iOS 27.3. Availability depends on compatible hardware, Apple Intelligence settings, supported Siri/device language, and region.
 
-## Current project status
+## Recognition and privacy notes
 
-The first milestone establishes the native SwiftUI app shell, Liquid Glass-inspired interface, conversation intent selection, a custom animated voice visualizer, and GitHub Actions build/test automation. Live transcription, translation, Siri/App Intents integration, and spoken reply delivery are staged as separate, testable capabilities.
+- The app requests microphone and speech-recognition permissions only when the user starts a session.
+- Apple Translation processes translation text on device. Some Speech locales require a network connection and may use Apple's speech-recognition service.
+- Auto recognition compares up to eight supported locale recognizers. It is a practical candidate-selection strategy, not a guarantee of perfect language identification in noisy or overlapping conversations. Manual source-language selection is available.
+- Audio is not intentionally recorded or saved by Hawaian. Recent translated context is held only in memory for the active session and cleared when the session stops.
+- Audio continues through the system route, including supported Bluetooth earbuds. Background audio mode is enabled to support an active listening session while the screen is locked.
 
-## Build
+## Build and test
 
-The Xcode project is generated from `project.yml` with XcodeGen:
+The project is generated from `project.yml` with XcodeGen and requires Xcode 27 / iOS 27 SDK.
 
-```sh
-brew install xcodegen
-xcodegen generate
-xcodebuild -project Hawaian.xcodeproj -scheme Hawaian -destination 'platform=iOS Simulator,name=iPhone 17' build
-```
+Install XcodeGen, run `xcodegen generate`, then build and test the `Hawaian` scheme for an iOS 27 simulator with code signing disabled.
 
-## CI
-
-GitHub Actions runs project generation, simulator build, and unit tests on macOS. The workflow does not sign or distribute an IPA; signing and device installation require separate provisioning configuration.
+GitHub Actions runs project generation, simulator build, and unit tests. The workflow does not sign or distribute an IPA; device installation still requires signing and provisioning.
