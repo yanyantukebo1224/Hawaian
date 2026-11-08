@@ -21,7 +21,7 @@ enum SpeechLanguagePolicy {
     static func recognitionCandidates(
         _ locales: [Locale],
         preferredLanguageCode: String = "auto",
-        maximumAutomaticLanguages: Int = 8
+        maximumAutomaticLanguages: Int = 2
     ) -> [Locale] {
         if preferredLanguageCode.lowercased() != "auto" {
             return locales.filter {
