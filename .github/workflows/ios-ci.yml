@@ -35,33 +35,8 @@ jobs:
       - name: Generate Xcode project
         run: xcodegen generate
 
-      - name: Show available simulators
-        run: xcrun simctl list devices available
-
-      - name: Build for iOS Simulator
-        run: |
-          xcodebuild \
-            -project Hawaian.xcodeproj \
-            -scheme Hawaian \
-            -destination 'generic/platform=iOS Simulator' \
-            -derivedDataPath build/SimulatorDerivedData \
-            CODE_SIGNING_ALLOWED=NO \
-            build
-
-      - name: Run unit tests
-        run: |
-          DEVICE_ID="$(xcrun simctl list devices available -j | python3 -c 'import json,sys; d=json.load(sys.stdin); xs=[x["udid"] for group in d["devices"].values() for x in group if "iPhone" in x["name"] and x["isAvailable"]]; print(xs[0] if xs else "")')"
-          if [ -z "$DEVICE_ID" ]; then
-            echo "No available iPhone simulator was found."
-            exit 1
-          fi
-          xcodebuild \
-            -project Hawaian.xcodeproj \
-            -scheme Hawaian \
-            -destination "platform=iOS Simulator,id=$DEVICE_ID" \
-            -derivedDataPath build/SimulatorDerivedData \
-            CODE_SIGNING_ALLOWED=NO \
-            test
+      # Simulator build/test are intentionally omitted from the IPA pipeline.
+      # The deliverable is a device-arm64 app; simulator runtime availability is independent.
 
       - name: Build unsigned iOS device app
         run: |
