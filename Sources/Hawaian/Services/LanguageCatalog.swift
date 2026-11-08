@@ -26,7 +26,7 @@ final class LanguageCatalog: ObservableObject {
             }
 
         translationLanguages = translation.sorted {
-            (Locale.current.localizedString(forIdentifier: $0.minimalIdentifier) ?? $0.minimalIdentifier).localizedStandardCompare(Locale.current.localizedString(forIdentifier: $1.minimalIdentifier) ?? $1.minimalIdentifier) == .orderedAscending
+            displayName(for: $0.minimalIdentifier).localizedStandardCompare(displayName(for: $1.minimalIdentifier)) == .orderedAscending
         }
         isLoaded = true
     }
