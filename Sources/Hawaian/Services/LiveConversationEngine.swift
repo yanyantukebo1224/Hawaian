@@ -79,7 +79,8 @@ final class LiveConversationEngine: ObservableObject {
         }
         let candidates = SpeechLanguagePolicy.recognitionCandidates(
             translatableLocales,
-            preferredLanguageCode: inputLanguageCode
+            preferredLanguageCode: inputLanguageCode,
+            maximumAutomaticLanguages: 2
         )
 
         guard !candidates.isEmpty else {
@@ -100,12 +101,16 @@ final class LiveConversationEngine: ObservableObject {
         do {
             try configureAudioSession()
             try startAudioCapture()
-            rebuildRecognitionTasks()
             state = .listening
+            rebuildRecognitionTasks()
             updateOutputRoute()
         } catch {
+            tasks.forEach { $0.cancel() }
+            tasks.removeAll()
+            requestBox.replace(with: [])
             stopAudioCapture()
             state = .failed(error.localizedDescription)
+            lastError = error.localizedDescription
         }
     }
 
@@ -188,7 +193,10 @@ final class LiveConversationEngine: ObservableObject {
 
     private func startAudioCapture() throws {
         let input = audioEngine.inputNode
-        let format = input.outputFormat(forBus: 0)
+        let format = input.inputFormat(forBus: 0)
+        guard format.sampleRate > 0, format.channelCount > 0 else {
+            throw NSError(domain: "Hawaian.Audio", code: 1, userInfo: [NSLocalizedDescriptionKey: "Microphone input format is unavailable. Check the microphone permission and audio route."])
+        }
         input.removeTap(onBus: 0)
         let requestBox = self.requestBox
         input.installTap(onBus: 0, bufferSize: 2048, format: format) { buffer, _ in
