@@ -135,7 +135,8 @@ struct ContentView: View {
     }
 
     private var languageBar: some View {
-        HStack(spacing: 10) {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 10) {
             Menu {
                 Button("Auto detect (up to 8 languages)") { inputLanguageCode = "auto" }
                 ForEach(languageCatalog.speechInputLocales, id: \.identifier) { locale in
@@ -175,9 +176,9 @@ struct ContentView: View {
                 .padding(.vertical, 10)
                 .glassEffect(.regular, in: Capsule())
             }
-            Spacer(minLength: 0)
-        }
-        HStack(spacing: 7) {
+                Spacer(minLength: 0)
+            }
+            HStack(spacing: 7) {
             Image(systemName: "speaker.slash")
             Text(ignoreDeviceLanguage
                  ? "Ignoring device language: \(languageCatalog.displayName(for: SpeechLanguagePolicy.deviceLanguageCode()))"
@@ -187,7 +188,8 @@ struct ContentView: View {
                 .monospacedDigit()
         }
         .font(.system(size: 10, weight: .medium))
-        .foregroundStyle(.cyan.opacity(0.82))
+                .foregroundStyle(.cyan.opacity(0.82))
+        }
     }
 
     private func languagePill(_ title: String, icon: String) -> some View {
