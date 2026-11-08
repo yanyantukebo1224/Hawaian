@@ -47,6 +47,7 @@ struct ContentView: View {
                 .padding(.bottom, 36)
             }
         }
+        .environment(\.locale, Locale(identifier: Locale.preferredLanguages.first ?? Locale.current.identifier))
         .translationTask(source: engine.translationSource, target: targetLanguage) { session in
             engine.setTranslationSession(session)
         }
@@ -138,7 +139,7 @@ struct ContentView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 10) {
             Menu {
-                Button("Auto detect (up to 8 languages)") { inputLanguageCode = "auto" }
+                Button("Auto detect (up to 2 languages)") { inputLanguageCode = "auto" }
                 ForEach(languageCatalog.speechInputLocales, id: \.identifier) { locale in
                     Button(languageCatalog.displayName(for: locale.identifier)) {
                         inputLanguageCode = locale.language.languageCode?.identifier ?? locale.identifier
@@ -184,7 +185,7 @@ struct ContentView: View {
                  ? "Ignoring device language: \(languageCatalog.displayName(for: SpeechLanguagePolicy.deviceLanguageCode()))"
                  : "Device language is included")
             Spacer()
-            Text(inputLanguageCode == "auto" ? "Auto: max 8" : "Manual input")
+            Text(inputLanguageCode == "auto" ? "Auto: max 2" : "Manual input")
                 .monospacedDigit()
         }
         .font(.system(size: 10, weight: .medium))
@@ -446,7 +447,7 @@ struct ContentView: View {
                          ? "The iPhone's preferred language is excluded from recognition candidates."
                          : "The iPhone's preferred language can be recognized.")
                         .font(.footnote).foregroundStyle(.secondary)
-                    Text("Available speech languages: \(languageCatalog.speechInputLocales.count). Auto mode uses up to 8 concurrent recognizers to keep latency and battery use manageable.")
+                    Text("Available speech languages: \(languageCatalog.speechInputLocales.count). Auto mode uses up to 2 concurrent recognizers to keep latency and battery use manageable.")
                         .font(.footnote).foregroundStyle(.secondary)
                 }
                 Section("Translation") {
