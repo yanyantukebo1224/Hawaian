@@ -14,7 +14,7 @@ enum SpeechLanguagePolicy {
             return locales
         }
         return locales.filter { locale in
-            locale.language.languageCode?.identifier?.lowercased() != excluded
+            locale.language.languageCode?.identifier.lowercased() != excluded
         }
     }
 }
