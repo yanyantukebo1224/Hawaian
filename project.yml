@@ -15,7 +15,12 @@ targets:
     type: application
     platform: iOS
     info:
+      path: Sources/Hawaian/Info.plist
       properties:
+        CFBundleDisplayName: Hawaian
+        NSMicrophoneUsageDescription: Hawaian uses the microphone to translate nearby conversations into your selected language.
+        NSSpeechRecognitionUsageDescription: Hawaian uses speech recognition to understand conversation audio.
+        UIUserInterfaceStyle: Automatic
         UIBackgroundModes:
           - audio
     sources:
