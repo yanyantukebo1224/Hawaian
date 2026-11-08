@@ -12,7 +12,8 @@ Hawaian is an earbud-first conversation assistant. It listens to a conversation,
 - Smart Reply proposes response patterns, not just literal translations.
 - Variable Fill asks only for information that is genuinely missing.
 - Multilingual architecture: language support is capability-driven, not hard-coded to Japanese and English.
-- Siri / Apple Intelligence integration through public Apple APIs such as App Intents where available.
+- Optional input-language exclusion: by default, the first preferred language in iOS Settings is excluded from speech-recognition candidates. A Japanese-configured iPhone therefore won’t treat Japanese as an incoming language. The policy is implemented and tested; it takes effect in live capture once the speech engine is connected.
+- Siri AI (Apple’s newer conversational assistant, distinct from the Foundation Models framework) integration through public App Intents APIs where available. Siri AI app integration entered Developer Preview with iOS 27.3; availability depends on device, supported Siri/device language, region, and Apple Intelligence being enabled.
 
 ## Important platform boundary
 
@@ -29,7 +30,7 @@ The Xcode project is generated from `project.yml` with XcodeGen:
 ```sh
 brew install xcodegen
 xcodegen generate
-xcodebuild -project Hawaian.xcodeproj -scheme Hawaian -destination 'platform=iOS Simulator,name=iPhone 16e' build
+xcodebuild -project Hawaian.xcodeproj -scheme Hawaian -destination 'platform=iOS Simulator,name=iPhone 17' build
 ```
 
 ## CI
