@@ -1,0 +1,40 @@
+name: Hawaian
+options:
+  bundleIdPrefix: com.yanyantukebo1224
+  deploymentTarget:
+    iOS: "26.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    IPHONEOS_DEPLOYMENT_TARGET: "26.0"
+    TARGETED_DEVICE_FAMILY: "1,2"
+    DEVELOPMENT_TEAM: ""
+targets:
+  Hawaian:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources/Hawaian
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.yanyantukebo1224.Hawaian
+        PRODUCT_NAME: Hawaian
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Hawaian
+        INFOPLIST_KEY_NSMicrophoneUsageDescription: Hawaian uses the microphone to translate nearby conversations into your selected language.
+        INFOPLIST_KEY_NSSpeechRecognitionUsageDescription: Hawaian uses speech recognition to understand conversation audio.
+        INFOPLIST_KEY_UIUserInterfaceStyle: Automatic
+        SWIFT_EMIT_LOC_STRINGS: YES
+        ENABLE_PREVIEWS: YES
+  HawaianTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: Tests/HawaianTests
+    dependencies:
+      - target: Hawaian
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.yanyantukebo1224.HawaianTests
+        GENERATE_INFOPLIST_FILE: YES
