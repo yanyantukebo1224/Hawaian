@@ -27,8 +27,8 @@ Hawaian uses Apple's public App Intents integration so Siri AI can discover and 
 
 ## Build and test
 
-The project is generated from `project.yml` with XcodeGen and requires Xcode 27 / iOS 27 SDK.
+The project is generated from `project.yml` with XcodeGen and requires Xcode 27 / iOS 27.2 SDK.
 
 Install XcodeGen, run `xcodegen generate`, then build and test the `Hawaian` scheme for an iOS 27 simulator with code signing disabled.
 
-GitHub Actions runs project generation, simulator build, and unit tests. The workflow does not sign or distribute an IPA; device installation still requires signing and provisioning.
+GitHub Actions runs project generation, simulator build, and unit tests. GitHub Actions creates an unsigned device IPA as a downloadable artifact. It is not installable as-is; sign it with a sideloading tool and a valid provisioning profile before installing.
