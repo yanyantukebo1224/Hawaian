@@ -26,7 +26,7 @@ final class LiveConversationEngine: ObservableObject {
     private var recognizers: [(code: String, recognizer: SFSpeechRecognizer)] = []
     private var tasks: [SFSpeechRecognitionTask] = []
     private var requests: [SFSpeechAudioBufferRecognitionRequest] = []
-    private let requestLock = NSLock()
+    private let requestBox = AudioRequestBox()
     private var generation = 0
     private var isRestarting = false
     private var translationSession: TranslationSession?
@@ -111,9 +111,7 @@ final class LiveConversationEngine: ObservableObject {
         tasks.forEach { $0.cancel() }
         tasks.removeAll()
         requests.removeAll()
-        requestLock.lock()
-        requests = []
-        requestLock.unlock()
+        requestBox.replace(with: [])
         stopAudioCapture()
         synthesizer.stopSpeaking(at: .immediate)
         detectedLanguageCode = nil
@@ -150,12 +148,9 @@ final class LiveConversationEngine: ObservableObject {
         let input = audioEngine.inputNode
         let format = input.outputFormat(forBus: 0)
         input.removeTap(onBus: 0)
-        input.installTap(onBus: 0, bufferSize: 2048, format: format) { [weak self] buffer, _ in
-            guard let self else { return }
-            self.requestLock.lock()
-            let currentRequests = self.requests
-            self.requestLock.unlock()
-            currentRequests.forEach { $0.append(buffer) }
+        let requestBox = self.requestBox
+        input.installTap(onBus: 0, bufferSize: 2048, format: format) { buffer, _ in
+            requestBox.append(buffer)
         }
         audioEngine.prepare()
         try audioEngine.start()
@@ -174,9 +169,7 @@ final class LiveConversationEngine: ObservableObject {
             request.requiresOnDeviceRecognition = pair.recognizer.supportsOnDeviceRecognition
             return request
         }
-        requestLock.lock()
-        requests = newRequests
-        requestLock.unlock()
+        requestBox.replace(with: newRequests)
         activeInputCount = recognizers.count
 
         for (index, pair) in recognizers.enumerated() {
@@ -269,5 +262,24 @@ final class LiveConversationEngine: ObservableObject {
             audioEngine.inputNode.removeTap(onBus: 0)
         }
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+    }
+}
+
+
+private final class AudioRequestBox: @unchecked Sendable {
+    private let lock = NSLock()
+    private var requests: [SFSpeechAudioBufferRecognitionRequest] = []
+
+    func replace(with newRequests: [SFSpeechAudioBufferRecognitionRequest]) {
+        lock.lock()
+        requests = newRequests
+        lock.unlock()
+    }
+
+    func append(_ buffer: AVAudioPCMBuffer) {
+        lock.lock()
+        let current = requests
+        lock.unlock()
+        current.forEach { $0.append(buffer) }
     }
 }
