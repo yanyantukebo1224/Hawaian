@@ -47,30 +47,44 @@ final class LiveConversationEngine: ObservableObject {
     }
 
     func start(targetLanguageCode: String, excludeDeviceLanguage: Bool, inputLanguageCode: String = "auto") async {
-        guard state != .listening, state != .requestingPermission else { return }
+        HawaianDiagnostics.shared.mark("START entered; state=\(state)")
+        guard state != .listening, state != .requestingPermission else {
+            HawaianDiagnostics.shared.mark("START ignored because engine is already active")
+            return
+        }
         state = .requestingPermission
+        HawaianDiagnostics.shared.mark("state=requestingPermission")
         lastError = nil
         self.targetLanguageCode = targetLanguageCode
         self.excludeDeviceLanguage = excludeDeviceLanguage
         self.inputLanguageCode = inputLanguageCode
 
+        HawaianDiagnostics.shared.mark("requesting microphone permission")
         let microphoneGranted = await AVAudioApplication.requestRecordPermission()
+        HawaianDiagnostics.shared.mark("microphone permission result=\(microphoneGranted)")
         guard microphoneGranted else {
             state = .failed("Microphone permission is required.")
             return
         }
 
+        HawaianDiagnostics.shared.mark("requesting speech authorization")
         let speechStatus = await withCheckedContinuation { continuation in
             SFSpeechRecognizer.requestAuthorization { continuation.resume(returning: $0) }
         }
+        HawaianDiagnostics.shared.mark("speech authorization status=\(speechStatus.rawValue)")
         guard speechStatus == .authorized else {
             state = .failed("Speech recognition permission is required.")
             return
         }
 
+        HawaianDiagnostics.shared.mark("enumerating Speech supported locales")
+        let supportedLocales = Array(SFSpeechRecognizer.supportedLocales())
+        HawaianDiagnostics.shared.mark("Speech supported locales count=\(supportedLocales.count)")
         let excluded = excludeDeviceLanguage ? SpeechLanguagePolicy.deviceLanguageCode() : nil
-        let locales = SpeechLanguagePolicy.filter(Array(SFSpeechRecognizer.supportedLocales()), excludingLanguageCode: excluded)
+        let locales = SpeechLanguagePolicy.filter(supportedLocales, excludingLanguageCode: excluded)
+        HawaianDiagnostics.shared.mark("requesting Translation supported languages")
         let translationLanguages = await TranslationLanguageProvider.supportedLanguages()
+        HawaianDiagnostics.shared.mark("Translation supported languages count=\(translationLanguages.count)")
         let translationCodes = Set(translationLanguages.map {
             $0.languageCode?.identifier.lowercased() ?? $0.minimalIdentifier.lowercased()
         })
@@ -78,12 +92,14 @@ final class LiveConversationEngine: ObservableObject {
             let code = locale.language.languageCode?.identifier.lowercased() ?? ""
             return translationCodes.contains(code)
         }
+        HawaianDiagnostics.shared.mark("building recognition candidates")
         let candidates = SpeechLanguagePolicy.recognitionCandidates(
             translatableLocales,
             preferredLanguageCode: inputLanguageCode,
             maximumAutomaticLanguages: 2
         )
 
+        HawaianDiagnostics.shared.mark("recognition candidates count=\(candidates.count)")
         guard !candidates.isEmpty else {
             state = .failed("No speech and translation languages are available after applying your language filter.")
             return
@@ -94,18 +110,26 @@ final class LiveConversationEngine: ObservableObject {
             return (locale.language.languageCode?.identifier ?? locale.identifier, recognizer)
         }
 
+        HawaianDiagnostics.shared.mark("available recognizers count=\(recognizers.count)")
         guard !recognizers.isEmpty else {
             state = .failed("Apple speech recognition is currently unavailable.")
             return
         }
 
         do {
+            HawaianDiagnostics.shared.mark("configuring AVAudioSession")
             try configureAudioSession()
+            HawaianDiagnostics.shared.mark("AVAudioSession configured; starting audio capture")
             try startAudioCapture()
+            HawaianDiagnostics.shared.mark("audio capture started")
             state = .listening
+            HawaianDiagnostics.shared.mark("state=listening; creating Speech tasks")
             rebuildRecognitionTasks()
+            HawaianDiagnostics.shared.mark("Speech tasks created")
             updateOutputRoute()
+            HawaianDiagnostics.shared.mark("START completed")
         } catch {
+            HawaianDiagnostics.shared.mark("START caught error: \(error.localizedDescription)")
             tasks.forEach { $0.cancel() }
             tasks.removeAll()
             requestBox.replace(with: [])
@@ -187,27 +211,38 @@ final class LiveConversationEngine: ObservableObject {
     }
 
     private func configureAudioSession() throws {
+        HawaianDiagnostics.shared.mark("audio session: obtaining shared instance")
         let session = AVAudioSession.sharedInstance()
         try session.setCategory(.playAndRecord, mode: .spokenAudio, options: [.allowBluetooth, .allowBluetoothA2DP, .duckOthers])
-        try session.setActive(true, options: .notifyOthersOnDeactivation)
+        HawaianDiagnostics.shared.mark("audio session: category set; activating")
+        try session.setActive(true)
+        HawaianDiagnostics.shared.mark("audio session: active")
     }
 
     private func startAudioCapture() throws {
+        HawaianDiagnostics.shared.mark("audio capture: obtaining input node")
         let input = audioEngine.inputNode
+        HawaianDiagnostics.shared.mark("audio capture: reading input format")
         let format = input.outputFormat(forBus: 0)
+        HawaianDiagnostics.shared.mark("audio capture: format sampleRate=\(format.sampleRate), channels=\(format.channelCount)")
         guard format.sampleRate > 0, format.channelCount > 0 else {
             throw NSError(domain: "Hawaian.Audio", code: 1, userInfo: [NSLocalizedDescriptionKey: "Microphone input format is unavailable. Check the microphone permission and audio route."])
         }
         let requestBox = self.requestBox
+        HawaianDiagnostics.shared.mark("audio capture: installing input tap")
         input.installTap(onBus: 0, bufferSize: 2048, format: format) { buffer, _ in
             requestBox.append(buffer)
         }
         inputTapInstalled = true
+        HawaianDiagnostics.shared.mark("audio capture: tap installed; preparing engine")
         audioEngine.prepare()
+        HawaianDiagnostics.shared.mark("audio capture: starting engine")
         try audioEngine.start()
+        HawaianDiagnostics.shared.mark("audio capture: engine running")
     }
 
     private func rebuildRecognitionTasks() {
+        HawaianDiagnostics.shared.mark("Speech task rebuild requested; recognizers=\(recognizers.count), audioRunning=\(audioEngine.isRunning)")
         guard !recognizers.isEmpty, audioEngine.isRunning else { return }
         generation += 1
         let currentGeneration = generation
@@ -226,6 +261,7 @@ final class LiveConversationEngine: ObservableObject {
         for (index, pair) in recognizers.enumerated() {
             let request = newRequests[index]
             let languageCode = pair.code
+            HawaianDiagnostics.shared.mark("creating Speech task for locale=\(languageCode)")
             let task = pair.recognizer.recognitionTask(with: request) { [weak self] result, error in
                 guard let self else { return }
                 if let result {
