@@ -17,23 +17,17 @@ concurrency:
 jobs:
   build-and-test:
     name: Build and test Hawaian
-    runs-on: macos-26
+    runs-on: xcode-27
     timeout-minutes: 35
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Select latest Xcode
+      - name: Verify Xcode 27 and iOS 27 SDK
         run: |
-          XCODE_PATH="$(find /Applications -maxdepth 1 -name 'Xcode_26*.app' -print | sort -V | tail -n 1)"
-          if [ -z "$XCODE_PATH" ] && [ -d /Applications/Xcode.app ]; then
-            XCODE_PATH="/Applications/Xcode.app"
-          fi
-          if [ -n "$XCODE_PATH" ]; then
-            sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
-          fi
           xcodebuild -version
+          xcodebuild -showsdks | grep -E "iOS 27(\.|$)"
 
       - name: Install XcodeGen
         run: brew install xcodegen
