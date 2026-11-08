@@ -9,9 +9,9 @@ private enum HawaianIntentKeys {
 }
 
 struct StartHawaianListeningIntent: AppIntent {
-    static var title: LocalizedStringResource = "Start Hawaian Listening"
-    static var description = IntentDescription("Open Hawaian and start translating a conversation.")
-    static var openAppWhenRun: Bool = true
+    static let title: LocalizedStringResource = "Start Hawaian Listening"
+    static let description = IntentDescription("Open Hawaian and start translating a conversation.")
+    static let openAppWhenRun: Bool = true
 
     func perform() async throws -> some IntentResult {
         UserDefaults.standard.set(true, forKey: HawaianIntentKeys.pendingStart)
@@ -21,9 +21,9 @@ struct StartHawaianListeningIntent: AppIntent {
 }
 
 struct StopHawaianListeningIntent: AppIntent {
-    static var title: LocalizedStringResource = "Stop Hawaian Listening"
-    static var description = IntentDescription("Stop Hawaian's live conversation session.")
-    static var openAppWhenRun: Bool = true
+    static let title: LocalizedStringResource = "Stop Hawaian Listening"
+    static let description = IntentDescription("Stop Hawaian's live conversation session.")
+    static let openAppWhenRun: Bool = true
 
     func perform() async throws -> some IntentResult {
         UserDefaults.standard.set(true, forKey: HawaianIntentKeys.pendingStop)
@@ -33,9 +33,9 @@ struct StopHawaianListeningIntent: AppIntent {
 }
 
 struct GetHawaianTranslationIntent: AppIntent {
-    static var title: LocalizedStringResource = "Get Latest Hawaian Translation"
-    static var description = IntentDescription("Read the latest translated conversation from Hawaian.")
-    static var openAppWhenRun: Bool = false
+    static let title: LocalizedStringResource = "Get Latest Hawaian Translation"
+    static let description = IntentDescription("Read the latest translated conversation from Hawaian.")
+    static let openAppWhenRun: Bool = false
 
     func perform() async throws -> some IntentResult {
         let translation = UserDefaults.standard.string(forKey: HawaianIntentKeys.latestTranslation) ?? ""
