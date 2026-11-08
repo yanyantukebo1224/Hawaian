@@ -31,6 +31,7 @@ final class LiveConversationEngine: ObservableObject {
     private let requestBox = AudioRequestBox()
     private var generation = 0
     private var isRestarting = false
+    private var inputTapInstalled = false
     private var translationSession: TranslationSession?
     private var replyTranslationSession: TranslationSession?
     private var translationTask: Task<Void, Never>?
@@ -197,11 +198,11 @@ final class LiveConversationEngine: ObservableObject {
         guard format.sampleRate > 0, format.channelCount > 0 else {
             throw NSError(domain: "Hawaian.Audio", code: 1, userInfo: [NSLocalizedDescriptionKey: "Microphone input format is unavailable. Check the microphone permission and audio route."])
         }
-        input.removeTap(onBus: 0)
         let requestBox = self.requestBox
         input.installTap(onBus: 0, bufferSize: 2048, format: format) { buffer, _ in
             requestBox.append(buffer)
         }
+        inputTapInstalled = true
         audioEngine.prepare()
         try audioEngine.start()
     }
@@ -312,10 +313,11 @@ final class LiveConversationEngine: ObservableObject {
 
     private func stopAudioCapture() {
         if audioEngine.isRunning {
-            audioEngine.inputNode.removeTap(onBus: 0)
             audioEngine.stop()
-        } else {
+        }
+        if inputTapInstalled {
             audioEngine.inputNode.removeTap(onBus: 0)
+            inputTapInstalled = false
         }
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
     }
