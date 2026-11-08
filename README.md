@@ -27,7 +27,7 @@ Hawaian uses Apple's public App Intents integration so Siri AI can discover and 
 
 ## Build and test
 
-The project is generated from `project.yml` with XcodeGen and requires Xcode 27 / iOS 27.2 SDK.
+The project is generated from `project.yml` with XcodeGen and requires Xcode 27 / iOS 27.1+ (including iOS 27.2) SDK.
 
 Install XcodeGen, run `xcodegen generate`, then build and test the `Hawaian` scheme for an iOS 27 simulator with code signing disabled.
 
