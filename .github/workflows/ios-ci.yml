@@ -24,10 +24,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Verify Xcode and iOS 27.2 SDK
+      - name: Verify Xcode 27.1 SDK (compatible with iOS 27.2)
         run: |
           xcodebuild -version
-          xcodebuild -showsdks | grep -E "iOS 27(\\.2)?"
+          xcodebuild -showsdks | grep -E "iOS 27\\.1"
 
       - name: Install XcodeGen
         run: brew install xcodegen
@@ -89,7 +89,7 @@ jobs:
       - name: Upload unsigned IPA
         uses: actions/upload-artifact@v4
         with:
-          name: Hawaian-unsigned-iOS-27.2
+          name: Hawaian-unsigned-iOS-27.2-compatible
           path: build/ipa/Hawaian-unsigned.ipa
           if-no-files-found: error
           retention-days: 30
