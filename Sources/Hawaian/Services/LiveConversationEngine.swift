@@ -19,6 +19,7 @@ final class LiveConversationEngine: ObservableObject {
     @Published private(set) var detectedLanguageCode: String?
     @Published private(set) var activeInputCount = 0
     @Published private(set) var outputRouteName = "System audio"
+    @Published private(set) var spokenReplyPreview = ""
     @Published private(set) var lastError: String?
 
     private let audioEngine = AVAudioEngine()
@@ -30,6 +31,7 @@ final class LiveConversationEngine: ObservableObject {
     private var generation = 0
     private var isRestarting = false
     private var translationSession: TranslationSession?
+    private var replyTranslationSession: TranslationSession?
     private var translationTask: Task<Void, Never>?
     private var latestCandidateScore = -1.0
     private var lastSpokenTranslation = ""
@@ -127,6 +129,25 @@ final class LiveConversationEngine: ObservableObject {
         translateLatest()
     }
 
+    func setReplyTranslationSession(_ session: TranslationSession) {
+        replyTranslationSession = session
+    }
+
+    func speakReply(_ text: String) async {
+        guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        guard let replyTranslationSession else {
+            lastError = "Reply translation is not ready yet."
+            return
+        }
+        do {
+            let response = try await replyTranslationSession.translate(text)
+            spokenReplyPreview = response.targetText
+            speak(response.targetText, languageCode: detectedLanguageCode ?? "en")
+        } catch {
+            lastError = "Reply translation unavailable: \(error.localizedDescription)"
+        }
+    }
+
     func speakLatestTranslation() {
         guard !translatedText.isEmpty else { return }
         speak(translatedText, languageCode: targetLanguageCode)
@@ -135,6 +156,7 @@ final class LiveConversationEngine: ObservableObject {
     func updateTargetLanguage(_ code: String) {
         targetLanguageCode = code
         translationSession = nil
+        replyTranslationSession = nil
         translatedText = ""
     }
 
