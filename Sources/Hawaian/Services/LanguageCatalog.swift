@@ -1,4 +1,5 @@
 import Foundation
+import Combine
 import Speech
 import Translation
 
@@ -20,12 +21,12 @@ final class LanguageCatalog: ObservableObject {
                 return translationCodes.contains(code)
             }
             .sorted {
-                $0.localizedString(forIdentifier: $0.identifier) ?? $0.identifier
-                    < $1.localizedString(forIdentifier: $1.identifier) ?? $1.identifier
+                Locale.current.localizedString(forIdentifier: $0.identifier) ?? $0.identifier
+                    < Locale.current.localizedString(forIdentifier: $1.identifier) ?? $1.identifier
             }
 
         translationLanguages = translation.sorted {
-            $0.localizedDescription.localizedStandardCompare($1.localizedDescription) == .orderedAscending
+            (Locale.current.localizedString(forIdentifier: $0.minimalIdentifier) ?? $0.minimalIdentifier).localizedStandardCompare(Locale.current.localizedString(forIdentifier: $1.minimalIdentifier) ?? $1.minimalIdentifier) == .orderedAscending
         }
         isLoaded = true
     }
