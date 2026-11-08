@@ -1,7 +1,7 @@
 import Foundation
 import Combine
 import Speech
-import Translation
+@preconcurrency import Translation
 
 @MainActor
 final class LanguageCatalog: ObservableObject {
@@ -11,7 +11,7 @@ final class LanguageCatalog: ObservableObject {
 
     func load(excludingDeviceLanguage: Bool, targetLanguageCode: String? = nil) async {
         let speechLocales = Array(SFSpeechRecognizer.supportedLocales())
-        let translation = await LanguageAvailability().supportedLanguages
+        let translation = await TranslationLanguageProvider.supportedLanguages()
         let translationCodes = Set(translation.map { $0.languageCode?.identifier.lowercased() ?? $0.minimalIdentifier.lowercased() })
         let excludedCode = excludingDeviceLanguage ? SpeechLanguagePolicy.deviceLanguageCode() : nil
 
