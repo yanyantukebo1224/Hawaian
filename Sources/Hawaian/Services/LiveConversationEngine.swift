@@ -38,18 +38,20 @@ final class LiveConversationEngine: ObservableObject {
     private var lastSpokenTranslation = ""
     private var targetLanguageCode = "en"
     private var excludeDeviceLanguage = true
+    private var inputLanguageCode = "auto"
 
     var isListening: Bool { state == .listening }
     var translationSource: Locale.Language? {
         detectedLanguageCode.map { Locale.Language(identifier: $0) }
     }
 
-    func start(targetLanguageCode: String, excludeDeviceLanguage: Bool) async {
+    func start(targetLanguageCode: String, excludeDeviceLanguage: Bool, inputLanguageCode: String = "auto") async {
         guard state != .listening, state != .requestingPermission else { return }
         state = .requestingPermission
         lastError = nil
         self.targetLanguageCode = targetLanguageCode
         self.excludeDeviceLanguage = excludeDeviceLanguage
+        self.inputLanguageCode = inputLanguageCode
 
         let microphoneGranted = await withCheckedContinuation { continuation in
             AVAudioApplication.requestRecordPermission { continuation.resume(returning: $0) }
@@ -73,12 +75,14 @@ final class LiveConversationEngine: ObservableObject {
         let translationCodes = Set(translationLanguages.map {
             $0.languageCode?.identifier.lowercased() ?? $0.minimalIdentifier.lowercased()
         })
-        let candidates = locales
-            .filter { locale in
-                let code = locale.language.languageCode?.identifier.lowercased() ?? ""
-                return translationCodes.contains(code)
-            }
-            .sorted { $0.identifier < $1.identifier }
+        let translatableLocales = locales.filter { locale in
+            let code = locale.language.languageCode?.identifier.lowercased() ?? ""
+            return translationCodes.contains(code)
+        }
+        let candidates = SpeechLanguagePolicy.recognitionCandidates(
+            translatableLocales,
+            preferredLanguageCode: inputLanguageCode
+        )
 
         guard !candidates.isEmpty else {
             state = .failed("No speech and translation languages are available after applying your language filter.")
@@ -113,7 +117,6 @@ final class LiveConversationEngine: ObservableObject {
         translationSession = nil
         tasks.forEach { $0.cancel() }
         tasks.removeAll()
-        requests.removeAll()
         requestBox.replace(with: [])
         stopAudioCapture()
         synthesizer.stopSpeaking(at: .immediate)
@@ -146,6 +149,24 @@ final class LiveConversationEngine: ObservableObject {
             speak(response.targetText, languageCode: detectedLanguageCode ?? "en")
         } catch {
             lastError = "Reply translation unavailable: \(error.localizedDescription)"
+        }
+    }
+
+    func refreshOutputRoute() {
+        updateOutputRoute()
+    }
+
+    func handleAudioInterruption(_ notification: Notification) {
+        guard let rawType = notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt,
+              let type = AVAudioSession.InterruptionType(rawValue: rawType) else { return }
+        switch type {
+        case .began:
+            state = .interrupted("Audio was interrupted. Resume the session when ready.")
+        case .ended:
+            try? AVAudioSession.sharedInstance().setActive(true)
+            state = .interrupted("Audio is available again. Tap Start listening to resume.")
+        @unknown default:
+            state = .interrupted("Audio route changed. Restart the session to continue.")
         }
     }
 
