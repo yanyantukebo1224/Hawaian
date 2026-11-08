@@ -53,9 +53,7 @@ final class LiveConversationEngine: ObservableObject {
         self.excludeDeviceLanguage = excludeDeviceLanguage
         self.inputLanguageCode = inputLanguageCode
 
-        let microphoneGranted = await withCheckedContinuation { continuation in
-            AVAudioApplication.requestRecordPermission { continuation.resume(returning: $0) }
-        }
+        let microphoneGranted = await AVAudioApplication.requestRecordPermission()
         guard microphoneGranted else {
             state = .failed("Microphone permission is required.")
             return
