@@ -13,25 +13,25 @@ enum ConversationIntent: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .everyday: "Everyday"
-        case .dining: "Dining"
-        case .shopping: "Shopping"
-        case .travel: "Travel"
-        case .work: "Work"
-        case .learning: "Learning"
-        case .custom: "Custom"
+        case .everyday: NSLocalizedString("Everyday", comment: "")
+        case .dining: NSLocalizedString("Dining", comment: "")
+        case .shopping: NSLocalizedString("Shopping", comment: "")
+        case .travel: NSLocalizedString("Travel", comment: "")
+        case .work: NSLocalizedString("Work", comment: "")
+        case .learning: NSLocalizedString("Learning", comment: "")
+        case .custom: NSLocalizedString("Custom", comment: "")
         }
     }
 
     var subtitle: String {
         switch self {
-        case .everyday: "Casual conversation"
-        case .dining: "Order, ask, enjoy"
-        case .shopping: "Find the right thing"
-        case .travel: "Move with confidence"
-        case .work: "Meetings and business"
-        case .learning: "Practice and understand"
-        case .custom: "Set your own context"
+        case .everyday: NSLocalizedString("Casual conversation", comment: "")
+        case .dining: NSLocalizedString("Order, ask, enjoy", comment: "")
+        case .shopping: NSLocalizedString("Find the right thing", comment: "")
+        case .travel: NSLocalizedString("Move with confidence", comment: "")
+        case .work: NSLocalizedString("Meetings and business", comment: "")
+        case .learning: NSLocalizedString("Practice and understand", comment: "")
+        case .custom: NSLocalizedString("Set your own context", comment: "")
         }
     }
 
@@ -49,13 +49,13 @@ enum ConversationIntent: String, CaseIterable, Identifiable {
 
     var guidance: String {
         switch self {
-        case .everyday: "Keep replies natural, friendly, and concise."
-        case .dining: "Help with menus, ordering, dietary needs, and polite questions."
-        case .shopping: "Help compare options, sizes, prices, and product details."
-        case .travel: "Help with directions, transport, bookings, and local situations."
-        case .work: "Prefer clear, professional, and appropriately formal replies."
-        case .learning: "Explain unfamiliar phrases and offer simple, useful replies."
-        case .custom: "Use the user's custom context without assuming details."
+        case .everyday: NSLocalizedString("Keep replies natural, friendly, and concise.", comment: "")
+        case .dining: NSLocalizedString("Help with menus, ordering, dietary needs, and polite questions.", comment: "")
+        case .shopping: NSLocalizedString("Help compare options, sizes, prices, and product details.", comment: "")
+        case .travel: NSLocalizedString("Help with directions, transport, bookings, and local situations.", comment: "")
+        case .work: NSLocalizedString("Prefer clear, professional, and appropriately formal replies.", comment: "")
+        case .learning: NSLocalizedString("Explain unfamiliar phrases and offer simple, useful replies.", comment: "")
+        case .custom: NSLocalizedString("Use the user's custom context without assuming details.", comment: "")
         }
     }
 }
