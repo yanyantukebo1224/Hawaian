@@ -44,3 +44,25 @@ final class SpeechLanguagePolicyTests: XCTestCase {
         XCTAssertEqual(SpeechLanguagePolicy.filter(locales, excludingLanguageCode: nil).count, 2)
     }
 }
+
+
+final class SmartReplyEngineTests: XCTestCase {
+    func testIntentChangesReplyTemplate() {
+        let dining = SmartReplyEngine.candidates(for: .dining, incomingText: "What would you like?")
+        let choice = dining.first { $0.id == "choose" }
+        XCTAssertEqual(choice?.body, "I'd like {choice}, please.")
+        XCTAssertTrue(choice?.requiresFill == true)
+    }
+
+    func testContextChangesClarificationSuggestion() {
+        let withoutContext = SmartReplyEngine.candidates(for: .everyday, incomingText: "Hello")
+        let withContext = SmartReplyEngine.candidates(for: .everyday, incomingText: "Hello", recentContext: ["Nice to meet you"])
+        XCTAssertEqual(withoutContext.first { $0.id == "clarify" }?.title, "Ask for clarification")
+        XCTAssertEqual(withContext.first { $0.id == "clarify" }?.title, "Check the context")
+    }
+
+    func testVariableFillReplacesChoice() {
+        let candidate = SmartReplyEngine.candidates(for: .shopping, incomingText: "").first { $0.id == "choose" }!
+        XCTAssertEqual(SmartReplyEngine.fill(candidate, with: "the blue one"), "I'd prefer the blue one.")
+    }
+}
