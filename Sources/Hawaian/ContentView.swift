@@ -152,7 +152,7 @@ struct ContentView: View {
                 .foregroundStyle(.white.opacity(0.45))
             Menu {
                 ForEach(languageCatalog.translationLanguages, id: \.minimalIdentifier) { language in
-                    Button(language.localizedDescription) {
+                    Button(languageCatalog.displayName(for: language.minimalIdentifier)) {
                         selectedLanguage = language.minimalIdentifier
                     }
                 }
@@ -442,7 +442,7 @@ struct ContentView: View {
                 Section("Translation") {
                     Picker("Translate into", selection: $selectedLanguage) {
                         ForEach(languageCatalog.translationLanguages, id: \.minimalIdentifier) { language in
-                            Text(language.localizedDescription).tag(language.minimalIdentifier)
+                            Text(languageCatalog.displayName(for: language.minimalIdentifier)).tag(language.minimalIdentifier)
                         }
                     }
                 }
