@@ -55,7 +55,9 @@ struct ContentView: View {
             engine.setReplyTranslationSession(session)
         }
         .task {
+            HawaianDiagnostics.shared.mark("APP task started")
             await languageCatalog.load(excludingDeviceLanguage: ignoreDeviceLanguage, targetLanguageCode: selectedLanguage)
+            HawaianDiagnostics.shared.mark("APP language catalog loaded")
             if pendingStop {
                 pendingStop = false
                 engine.stop()
@@ -220,9 +222,12 @@ struct ContentView: View {
                     .multilineTextAlignment(.center)
             }
             Button {
+                HawaianDiagnostics.shared.mark("UI Start button tapped")
                 if engine.isListening {
+                    HawaianDiagnostics.shared.mark("UI requested stop")
                     engine.stop()
                 } else {
+                    HawaianDiagnostics.shared.mark("UI scheduling startListening task")
                     Task { await startListening() }
                 }
             } label: {
@@ -516,9 +521,15 @@ struct ContentView: View {
 
     @MainActor
     private func startListening() async {
-        guard !isStarting else { return }
+        HawaianDiagnostics.shared.mark("ContentView.startListening entered")
+        guard !isStarting else {
+            HawaianDiagnostics.shared.mark("ContentView.startListening ignored; already starting")
+            return
+        }
         isStarting = true
+        HawaianDiagnostics.shared.mark("ContentView calling engine.start")
         await engine.start(targetLanguageCode: selectedLanguage, excludeDeviceLanguage: ignoreDeviceLanguage, inputLanguageCode: inputLanguageCode)
+        HawaianDiagnostics.shared.mark("ContentView engine.start returned")
         isStarting = false
     }
 }
