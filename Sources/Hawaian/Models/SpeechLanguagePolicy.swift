@@ -17,4 +17,17 @@ enum SpeechLanguagePolicy {
             locale.language.languageCode?.identifier.lowercased() != excluded
         }
     }
+    
+    static func recognitionCandidates(
+        _ locales: [Locale],
+        preferredLanguageCode: String = "auto",
+        maximumAutomaticLanguages: Int = 8
+    ) -> [Locale] {
+        if preferredLanguageCode.lowercased() != "auto" {
+            return locales.filter {
+                $0.language.languageCode?.identifier.lowercased() == preferredLanguageCode.lowercased()
+            }
+        }
+        return Array(locales.sorted { $0.identifier < $1.identifier }.prefix(maximumAutomaticLanguages))
+    }
 }
