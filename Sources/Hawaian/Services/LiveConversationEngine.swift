@@ -1,5 +1,6 @@
 import AVFoundation
 import Foundation
+import Combine
 import Speech
 import Translation
 
@@ -220,8 +221,9 @@ final class LiveConversationEngine: ObservableObject {
 
     private func receive(text: String, languageCode: String, confidence: Double, isFinal: Bool) {
         guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
-        guard confidence >= latestCandidateScore || detectedLanguageCode == languageCode else { return }
-        latestCandidateScore = confidence
+        let score = confidence + min(Double(text.count), 80) * 0.001
+        guard score >= latestCandidateScore || detectedLanguageCode == languageCode else { return }
+        latestCandidateScore = score
         detectedLanguageCode = languageCode
         recognizedText = text
         scheduleTranslation(text, final: isFinal)
