@@ -21,6 +21,7 @@ final class LiveConversationEngine: ObservableObject {
     @Published private(set) var activeInputCount = 0
     @Published private(set) var outputRouteName = "System audio"
     @Published private(set) var spokenReplyPreview = ""
+    @Published private(set) var contextMemory: [String] = []
     @Published private(set) var lastError: String?
 
     private let audioEngine = AVAudioEngine()
@@ -270,6 +271,10 @@ final class LiveConversationEngine: ObservableObject {
                 let response = try await session.translate(text)
                 guard !Task.isCancelled else { return }
                 translatedText = response.targetText
+                if final, contextMemory.last != response.targetText {
+                    contextMemory.append(response.targetText)
+                    if contextMemory.count > 6 { contextMemory.removeFirst(contextMemory.count - 6) }
+                }
                 if final, translatedText != lastSpokenTranslation {
                     lastSpokenTranslation = translatedText
                     speak(translatedText, languageCode: targetLanguageCode)
