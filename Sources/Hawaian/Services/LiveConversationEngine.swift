@@ -2,7 +2,7 @@ import AVFoundation
 import Foundation
 import Combine
 import Speech
-import Translation
+@preconcurrency import Translation
 
 @MainActor
 final class LiveConversationEngine: ObservableObject {
@@ -71,7 +71,7 @@ final class LiveConversationEngine: ObservableObject {
 
         let excluded = excludeDeviceLanguage ? SpeechLanguagePolicy.deviceLanguageCode() : nil
         let locales = SpeechLanguagePolicy.filter(Array(SFSpeechRecognizer.supportedLocales()), excludingLanguageCode: excluded)
-        let translationLanguages = await LanguageAvailability().supportedLanguages
+        let translationLanguages = await TranslationLanguageProvider.supportedLanguages()
         let translationCodes = Set(translationLanguages.map {
             $0.languageCode?.identifier.lowercased() ?? $0.minimalIdentifier.lowercased()
         })
