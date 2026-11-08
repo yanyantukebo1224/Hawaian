@@ -3,7 +3,8 @@ import SwiftUI
 struct ContentView: View {
     @State private var selectedIntent: ConversationIntent = .everyday
     @State private var isListening = false
-    @State private var selectedLanguage = "English"
+    @AppStorage("translationTargetLanguage") private var selectedLanguage = "English"
+    @AppStorage("ignoreDeviceLanguage") private var ignoreDeviceLanguage = true
     @State private var selectedReply: ReplySuggestion?
     @State private var showIntentPicker = false
     @State private var showSettings = false
@@ -87,6 +88,20 @@ struct ContentView: View {
             }
             Spacer(minLength: 0)
         }
+        if ignoreDeviceLanguage {
+            Label("Ignoring device language: \\(deviceLanguageName)", systemImage: "speaker.slash")
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(.cyan.opacity(0.88))
+        } else {
+            Text("All detected languages are eligible")
+                .font(.system(size: 11))
+                .foregroundStyle(.white.opacity(0.42))
+        }
+    }
+
+    private var deviceLanguageName: String {
+        let code = SpeechLanguagePolicy.deviceLanguageCode()
+        return Locale.current.localizedString(forLanguageCode: code) ?? code.uppercased()
     }
 
     private func languagePill(_ title: String, icon: String) -> some View {
@@ -253,6 +268,14 @@ struct ContentView: View {
     private var settingsSheet: some View {
         NavigationStack {
             Form {
+                Section("Speech input") {
+                    Toggle("Ignore device language", isOn: $ignoreDeviceLanguage)
+                    Text(ignoreDeviceLanguage
+                         ? "The preferred language of this iPhone (\\(deviceLanguageName)) will be excluded from recognition candidates. Other supported languages remain eligible."
+                         : "The iPhone preferred language is allowed as a recognition candidate.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
                 Section("Translation") {
                     Picker("Translate into", selection: $selectedLanguage) {
                         ForEach(languages, id: \.self) { language in
@@ -262,7 +285,7 @@ struct ContentView: View {
                 }
                 Section("Hawaian") {
                     Label("Earbud-first conversation assistant", systemImage: "airpodspro")
-                    Text("The animated orb is Hawaian's own voice visualizer. Siri and Apple Intelligence features will be connected only through public APIs supported by the device and language.")
+                    Text("Siri AI is Apple’s newer conversational assistant, not the Foundation Models framework. Hawaian will integrate through Apple’s public App Intents APIs; Siri AI app integration is in Developer Preview from iOS 27.3 and depends on device, language, and region eligibility. The orb is Hawaian’s own visualizer.")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
