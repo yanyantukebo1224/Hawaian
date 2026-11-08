@@ -1,4 +1,4 @@
-name: iOS CI
+name: iOS CI + Unsigned IPA
 
 on:
   push:
@@ -15,19 +15,19 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-and-test:
-    name: Build and test Hawaian
+  build-test-package:
+    name: Build, test and package Hawaian
     runs-on: xcode-27
-    timeout-minutes: 35
+    timeout-minutes: 50
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Verify Xcode 27 and iOS 27 SDK
+      - name: Verify Xcode and iOS 27.2 SDK
         run: |
           xcodebuild -version
-          xcodebuild -showsdks | grep -E "iOS 27(\.|$)"
+          xcodebuild -showsdks | grep -E "iOS 27(\\.2)?"
 
       - name: Install XcodeGen
         run: brew install xcodegen
@@ -44,7 +44,7 @@ jobs:
             -project Hawaian.xcodeproj \
             -scheme Hawaian \
             -destination 'generic/platform=iOS Simulator' \
-            -derivedDataPath build/DerivedData \
+            -derivedDataPath build/SimulatorDerivedData \
             CODE_SIGNING_ALLOWED=NO \
             build
 
@@ -59,6 +59,37 @@ jobs:
             -project Hawaian.xcodeproj \
             -scheme Hawaian \
             -destination "platform=iOS Simulator,id=$DEVICE_ID" \
-            -derivedDataPath build/DerivedData \
+            -derivedDataPath build/SimulatorDerivedData \
             CODE_SIGNING_ALLOWED=NO \
             test
+
+      - name: Build unsigned iOS device app
+        run: |
+          xcodebuild \
+            -project Hawaian.xcodeproj \
+            -scheme Hawaian \
+            -sdk iphoneos \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build/DeviceDerivedData \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build
+
+      - name: Package unsigned IPA
+        run: |
+          APP_PATH="build/DeviceDerivedData/Build/Products/Release-iphoneos/Hawaian.app"
+          test -d "$APP_PATH"
+          mkdir -p build/ipa/Payload
+          ditto "$APP_PATH" build/ipa/Payload/Hawaian.app
+          (cd build/ipa && /usr/bin/zip -qry Hawaian-unsigned.ipa Payload)
+          test -s build/ipa/Hawaian-unsigned.ipa
+          ls -lh build/ipa/Hawaian-unsigned.ipa
+
+      - name: Upload unsigned IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: Hawaian-unsigned-iOS-27.2
+          path: build/ipa/Hawaian-unsigned.ipa
+          if-no-files-found: error
+          retention-days: 30
