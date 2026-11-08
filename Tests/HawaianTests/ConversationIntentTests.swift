@@ -66,3 +66,19 @@ final class SmartReplyEngineTests: XCTestCase {
         XCTAssertEqual(SmartReplyEngine.fill(candidate, with: "the blue one"), "I'd prefer the blue one.")
     }
 }
+
+
+final class RecognitionCandidatePolicyTests: XCTestCase {
+    func testAutoRecognitionCandidateLimit() {
+        let locales = (0..<12).map { Locale(identifier: "lang" + String($0)) }
+        let selected = SpeechLanguagePolicy.recognitionCandidates(locales, maximumAutomaticLanguages: 8)
+        XCTAssertEqual(selected.count, 8)
+    }
+
+    func testManualRecognitionCandidateSelection() {
+        let locales = [Locale(identifier: "en-US"), Locale(identifier: "ja-JP"), Locale(identifier: "ko-KR")]
+        let selected = SpeechLanguagePolicy.recognitionCandidates(locales, preferredLanguageCode: "ko")
+        XCTAssertEqual(selected.count, 1)
+        XCTAssertEqual(selected.first?.language.languageCode?.identifier, "ko")
+    }
+}
